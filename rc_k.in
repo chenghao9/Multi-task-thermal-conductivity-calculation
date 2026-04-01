@@ -1,0 +1,52 @@
+# ==============================
+# 批处理总配置
+# 运行方法：python TC_rc.py rc_k.in
+##Author：cheng hao
+##Email: chenghao8425@163.com
+##微信公众号：材料计算学习笔记
+# ==============================
+
+# 根目录：所有需要计算的文件夹所在目录
+root_dir = C:/Users/chenghao/OneDrive/Desktop/多任务-热导计算
+
+# 扫描模式：list 或 auto：auto自动识别根目录下所有的文件夹，list是列举出需要计算的文件夹名
+scan_mode = auto
+
+# 当 scan_mode = list 时生效，例如需要计算文件夹0："case_dirs = 0,"。计算文件夹0和10："case_dirs = 0,10"。
+case_dirs = 0,
+
+# 批处理汇总结果文件名
+batch_summary_name = batch_results_summary.csv
+
+[defaults]
+# 输入文件名
+temp_input_name = temp.CNT.txt
+heat_flux_input_name = heat_flux_exchange.txt
+
+# 输出文件名
+extracted_temp_name = extracted_temperature_data.txt
+mean_temp_name = mean_temperature_data.txt
+mean_temp_figure_name = mean_temperature_vs_position_no_zero.png
+heat_flux_figure_name = energy_flux_fit.png
+temp_fit_figure_name = temperature_fit_single_range.png
+summary_name = result_summary.csv
+
+# 温度处理参数 num_blocks为一共输出多少块温度数据，num_chunks系统被分成多少个块，position_factor为系统长度
+num_blocks = 20
+num_chunks = 100
+position_factor = 197.39605679
+
+# 热流文件第一列时间步转 ps 的因子
+# 例如：如果 time_ps = timestep * 0.0005，则写 0.0005
+# 如果 time_ps = timestep * 0.001，则写 0.001
+time_ps_factor = 0.0005
+
+# 热导率计算参数：面积与拟合区域
+contact_area = 2.0e-18
+fit_range = 24, 170
+
+# 某个 case 单独覆盖参数示例
+#[case:10]
+#fit_range = 40, 150
+#contact_area = 2.2e-18
+#time_ps_factor = 0.001
