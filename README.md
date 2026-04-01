@@ -98,7 +98,7 @@ case_dirs = 0, 10, 20
 For a single folder:
 
 ```ini
-case_dirs = 0
+case_dirs = 0,
 ```
 
 #### `batch_summary_name`
