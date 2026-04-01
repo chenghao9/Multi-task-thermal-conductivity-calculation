@@ -1,177 +1,252 @@
 # Multi-task-thermal-conductivity-calculation
-Rapidly process NEMD simulation data to calculate thermal conductivity (LAMMPS software)
-# ==============================
-##Author：cheng hao
-##Email: chenghao8425@163.com
-##微信公众号：材料计算学习笔记
-# ==============================
+A Python script for batch processing temperature and heat-flux files from multiple molecular dynamics case folders and automatically calculating thermal conductivity.
 
-1. 脚本用途
+## Overview
 
-TC_rc.py 用于**批量处理多个分子动力学算例文件夹中的温度文件和热流文件**，并自动计算每个算例的热导率 `k`。
+`TC_rc.py` is designed for non-equilibrium molecular dynamics (NEMD) post-processing workflows where multiple simulation case folders need to be analyzed in a consistent and automated way.
 
-脚本适用于如下场景：
-有多个子文件夹（如 `0`、`10`、`20`、`30` 等）
-每个子文件夹中都包含一个温度分布文件和一个热流交换文件
-依次处理这些文件夹
-将结果分别保存到各自文件夹中，并在根目录下生成一个总汇总表
-通过一个简单的文本输入文件（如 `rc\\\_k.in`）统一控制参数
+The script can:
 
-2. 主要功能
+- read temperature distribution data from each case folder
+- calculate the averaged temperature profile
+- fit heat-flux exchange data to obtain the average heat power
+- fit the temperature profile in a user-defined range to obtain the temperature gradient
+- calculate thermal conductivity from the heat-flux density and temperature gradient
+- save case-level results in each folder
+- generate a batch summary file in the root directory
 
-本脚本完成以下工作：
+This workflow is especially useful when handling a series of simulation folders such as `0`, `10`, `20`, and `30`, where each folder contains one temperature file and one heat-flux file.
 
-1. 读取每个文件夹中的温度文件
-2. 提取温度数据，计算平均温度分布
-3. 对热流交换文件进行线性拟合，得到平均热功率
-4. 对温度分布在指定区间内做线性拟合，得到温度梯度
-5. 根据热流密度与温度梯度计算热导率
-6. 将每个文件夹的结果分别保存到对应文件夹
-7. 在根目录下输出一个批处理汇总表 `results\\\_summary.csv`
+## Features
 
-3. 依赖环境
+- Batch processing of multiple case folders
+- Configurable input through a single parameter file
+- Automatic averaging of temperature data
+- Linear fitting of heat-flux exchange data
+- Linear fitting of temperature gradients in a specified range
+- Automatic calculation of thermal conductivity
+- Per-case output files and batch summary export
 
-建议使用 Python 3.9 及以上版本。
-需要安装以下 Python 包：
+## Requirements
 
-pip install numpy pandas matplotlib scipy
+- Python 3.9 or later
 
-4. 计算流程
-
-对每个文件夹，脚本按以下流程计算：
-### 第一步：处理温度数据
-
-读取前 num_blocks个 block
-每个 block 中读取 num_chunks个位置点
-将位置乘以 position_factor
-输出： extracted_temperature_data.txt，mean_temperature_data.txt，mean_temperature_vs_position_no_zero.png`
-
-### 第二步：拟合热流文件
-
-对热端和冷端能量交换分别做线性拟合
-输出：energy_flux_fit.png
-
-### 第三步：拟合温度梯度并计算热导率
-
-在 `fit\\\_range` 指定区间内对平均温度做线性拟合得到温度梯度和热流密度，计算热导率
-输出：temperature_fit_single_range.png和result_summary.csv
-
-5. rc_k.in文件参数说明
-### 顶层参数
-`root\\\_dir`：所有 case 子文件夹所在根目录
-可以写绝对路径
-也可以写 `.`，表示当前目录
-
-`scan\\\_mode`：扫描模式
-`list`：只处理 `case\\\_dirs` 中列出的文件夹
-`auto`：自动处理 `root\\\_dir` 下所有子文件夹
-
-`case\\\_dirs`：需要处理的 case 文件夹名列表
-示例：`case\\\_dirs = 0, 10, 20`
-若只处理一个文件夹，也可写：`case\\\_dirs = 0,`
-
-`batch\\\_summary\\\_name`：批处理汇总结果文件名
-
-### `\\\[defaults]` 中的参数
-
-#### 输入输出文件名
-
-`temp\\\_input\\\_name`：温度输入文件名
-`heat\\\_flux\\\_input\\\_name`：热流输入文件名
-`extracted\\\_temp\\\_name`：提取后的温度明细文件名
-`mean\\\_temp\\\_name`：平均温度分布文件名
-`mean\\\_temp\\\_figure\\\_name`：平均温度分布图文件名
-`heat\\\_flux\\\_figure\\\_name`：热流拟合图文件名
-`temp\\\_fit\\\_figure\\\_name`：温度拟合图文件名
-`summary\\\_name`：单个 case 结果汇总文件名
-
-#### 温度处理参数
-
-`num\\\_blocks`：用于平均的 block 数
-`num\\\_chunks`：每个 block 中读取的空间分块数
-`position\\\_factor`：位置缩放因子
-
-#### 热流处理参数
-
-`time\\\_ps\\\_factor`：热流文件第一列换算为 ps 的系数
-
-#### 热导率计算参数
-
-`contact\\\_area`：接触面积，单位 `m^2`
-`fit\\\_range`：拟合温度梯度的区间，如 `34, 160`
-
-### `\\\[case:xxx]` 覆盖参数
-
-如果某个 case 的参数与默认值不同，可以写单独覆盖段。例如：
-
-```
-
-\\\[case:10]
-
-fit\\\_range = 40, 150
-
-time\\\_ps\\\_factor = 0.001
-
-contact\\\_area = 2.2e-18
-
-```
-表示：只有文件夹 `10` 使用这组参数，其他文件夹仍使用 `\\\[defaults]` 中的参数。
----
-
-## 6. 运行方法
-
-进入脚本所在目录后，在命令行运行：
+Required Python packages:
 
 ```bash
-
-python TC\\\_rc.py rc\\\_k.in
-
+pip install numpy pandas matplotlib scipy
 ```
----
 
-## 7. 输出文件说明
+## Installation
 
-### 每个 case 文件夹下会生成
+Clone or copy the script and place it in your working directory together with the input file template.
 
-`extracted\\\_temperature\\\_data.txt`：提取后的温度明细数据
-`mean\\\_temperature\\\_data.txt`：平均温度分布数据
-`mean\\\_temperature\\\_vs\\\_position\\\_no\\\_zero.png`：平均温度分布图
-`energy\\\_flux\\\_fit.png`：热流拟合图
-`temperature\\\_fit\\\_single\\\_range.png`：温度拟合图
-`result\\\_summary.csv`：单个 case 结果汇总表
+Example files:
 
-### 根目录下会生成
-`batch\\\_results\\\_summary.csv`：所有 case 的汇总结果表
----
+- `TC_rc.py`
+- `rc_k.in`
 
-## 8. result_summary.csv 各列含义
+No additional installation is required beyond the Python dependencies listed above.
 
-`case`：算例名称（文件夹名）
-`status`：处理状态，`ok` 表示成功，`failed` 表示失败
-`P\\\_avg\\\_W`：平均热功率，单位 W
-`heat\\\_flux\\\_W\\\_m2`：热流密度，单位 W/m²
-`gradT\\\_K\\\_m`：温度梯度，单位 K/m
-`k\\\_W\\\_mK`：热导率，单位 W/(m·K)
-`slope\\\_hot\\\_eV\\\_ps`：热端能量交换拟合斜率，单位 eV/ps
-`slope\\\_cold\\\_eV\\\_ps`：冷端能量交换拟合斜率，单位 eV/ps
-`intercept\\\_hot`：热端拟合截距
-`intercept\\\_cold`：冷端拟合截距
-`temp\\\_slope\\\_K\\\_per\\\_A`：温度拟合原始斜率，单位 K/Å
-`temp\\\_intercept`：温度拟合截距
-`fit\\\_range\\\_start`：温度拟合区间起点
-`fit\\\_range\\\_end`：温度拟合区间终点
-`contact\\\_area\\\_m2`：接触面积，单位 m²
-`position\\\_factor`：位置缩放因子
-`time\\\_ps\\\_factor`：时间步换算为 ps 的系数
-`num\\\_blocks`：参与平均的 block 数
-`num\\\_chunks`：每个 block 中读取的 chunk 数
+## Project Structure
 
----
-## 9. 文件对应关系
+A typical directory structure is shown below:
 
-- 主程序：`TC1\\\_batch\\\_rc\\\_v3.py`
-- 参数文件模板：`rc\\\_k.in`
-- 单 case 结果：各子文件夹下 `result\\\_summary.csv`
-- 批处理汇总：根目录下 `batch\\\_results\\\_summary.csv`
+```text
+project_root/
+├── TC_rc.py
+├── rc_k.in
+├── 0/
+│   ├── temperature_file
+│   └── heat_flux_file
+├── 10/
+│   ├── temperature_file
+│   └── heat_flux_file
+├── 20/
+│   ├── temperature_file
+│   └── heat_flux_file
+└── ...
+```
 
----
+## Configuration
+
+All runtime settings are controlled through the input file `rc_k.in`.
+
+### Top-Level Parameters
+
+#### `root_dir`
+Root directory containing all case subfolders.
+
+- You can use an absolute path
+- You can also use `.` to indicate the current directory
+
+#### `scan_mode`
+Controls how case folders are discovered.
+
+- `list`: process only the folders specified in `case_dirs`
+- `auto`: automatically process all subfolders under `root_dir`
+
+#### `case_dirs`
+A comma-separated list of case folder names to process when `scan_mode = list`.
+
+Example:
+
+```ini
+case_dirs = 0, 10, 20
+```
+
+For a single folder:
+
+```ini
+case_dirs = 0
+```
+
+#### `batch_summary_name`
+File name of the batch summary output.
+
+### Parameters in `[defaults]`
+
+#### Input and Output File Names
+
+- `temp_input_name`: temperature input file name
+- `heat_flux_input_name`: heat-flux input file name
+- `extracted_temp_name`: extracted temperature detail file name
+- `mean_temp_name`: averaged temperature profile file name
+- `mean_temp_figure_name`: averaged temperature profile figure name
+- `heat_flux_figure_name`: heat-flux fitting figure name
+- `temp_fit_figure_name`: temperature fitting figure name
+- `summary_name`: summary file name for a single case
+
+#### Temperature Processing Parameters
+
+- `num_blocks`: number of blocks used for averaging
+- `num_chunks`: number of spatial chunks read in each block
+- `position_factor`: scaling factor applied to the position values
+
+#### Heat-Flux Processing Parameters
+
+- `time_ps_factor`: conversion factor used to convert the first column of the heat-flux file into ps
+
+#### Thermal Conductivity Parameters
+
+- `contact_area`: contact area in `m^2`
+- `fit_range`: fitting range for the temperature gradient, for example `34, 160`
+
+### Case-Specific Overrides
+
+If one case needs different settings from the defaults, add a dedicated override section.
+
+Example:
+
+```ini
+[case:10]
+fit_range = 40, 150
+time_ps_factor = 0.001
+contact_area = 2.2e-18
+```
+
+This means only folder `10` uses these values, while all other folders continue to use the settings in `[defaults]`.
+
+## Usage
+
+Run the script from the command line:
+
+```bash
+python TC_rc.py rc_k.in
+```
+
+## Workflow
+
+For each case folder, the script performs the following steps.
+
+### 1. Temperature Data Processing
+
+- Read the first `num_blocks` blocks
+- Read `num_chunks` spatial points from each block
+- Multiply the position values by `position_factor`
+- Export the extracted temperature data
+- Compute and export the averaged temperature profile
+
+Generated files:
+
+- `extracted_temperature_data.txt`
+- `mean_temperature_data.txt`
+- `mean_temperature_vs_position_no_zero.png`
+
+### 2. Heat-Flux Fitting
+
+- Perform linear fitting for the energy exchange at the hot side
+- Perform linear fitting for the energy exchange at the cold side
+- Estimate the average heat power
+
+Generated file:
+
+- `energy_flux_fit.png`
+
+### 3. Temperature Gradient Fitting and Thermal Conductivity Calculation
+
+- Perform linear fitting on the averaged temperature profile within `fit_range`
+- Obtain the temperature gradient
+- Calculate heat-flux density
+- Calculate thermal conductivity
+
+Generated files:
+
+- `temperature_fit_single_range.png`
+- `result_summary.csv`
+
+## Output Files
+
+### Files Generated in Each Case Folder
+
+- `extracted_temperature_data.txt`: extracted temperature detail data
+- `mean_temperature_data.txt`: averaged temperature profile data
+- `mean_temperature_vs_position_no_zero.png`: averaged temperature profile figure
+- `energy_flux_fit.png`: heat-flux fitting figure
+- `temperature_fit_single_range.png`: temperature fitting figure
+- `result_summary.csv`: summary file for the current case
+
+### File Generated in the Root Directory
+
+- `batch_results_summary.csv`: summary file for all processed cases
+
+## `result_summary.csv` Columns
+
+- `case`: case name (folder name)
+- `status`: processing status; `ok` means success and `failed` means failure
+- `P_avg_W`: average heat power in W
+- `heat_flux_W_m2`: heat-flux density in W/m²
+- `gradT_K_m`: temperature gradient in K/m
+- `k_W_mK`: thermal conductivity in W/(m·K)
+- `slope_hot_eV_ps`: fitted slope of hot-side energy exchange in eV/ps
+- `slope_cold_eV_ps`: fitted slope of cold-side energy exchange in eV/ps
+- `intercept_hot`: intercept of the hot-side fitting
+- `intercept_cold`: intercept of the cold-side fitting
+- `temp_slope_K_per_A`: raw fitted temperature slope in K/Å
+- `temp_intercept`: intercept of the temperature fitting
+- `fit_range_start`: start point of the fitting range
+- `fit_range_end`: end point of the fitting range
+- `contact_area_m2`: contact area in m²
+- `position_factor`: position scaling factor
+- `time_ps_factor`: conversion factor from time step to ps
+- `num_blocks`: number of blocks used for averaging
+- `num_chunks`: number of chunks read in each block
+
+## Notes
+
+- Make sure the input file names in `rc_k.in` match the actual file names in each case folder.
+- When using `scan_mode = auto`, all valid subfolders under `root_dir` will be processed automatically.
+- For reliable thermal conductivity fitting, choose `fit_range` carefully to avoid non-linear temperature regions.
+
+## File Mapping
+
+- Main script: `TC_rc.py`
+- Parameter template: `rc_k.in`
+- Per-case summary: `result_summary.csv`
+- Batch summary: `batch_results_summary.csv`
+
+## License
+
+- Author：cheng hao
+- Email: chenghao8425@163.com;chenghao8425@gmail.com
+- 微信公众号：材料计算学习笔记
